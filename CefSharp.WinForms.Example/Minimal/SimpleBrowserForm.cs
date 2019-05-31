@@ -6,6 +6,9 @@ using System;
 using System.Windows.Forms;
 using CefSharp.Example.JavascriptBinding;
 using CefSharp.WinForms.Internals;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CefSharp.WinForms.Example.Minimal
 {
@@ -58,6 +61,27 @@ namespace CefSharp.WinForms.Example.Minimal
                 browser.FocusHandler = null;
             }
 
+            browser.IsBrowserInitializedChanged += new EventHandler((object sender, EventArgs args) => {
+                if (browser.IsBrowserInitialized)
+                    InitEvalTimer();
+            });
+        }
+
+        private async void InitEvalTimer()
+        {
+            await Task.Delay(3000);
+            //browser.ShowDevTools();
+            var timer = new System.Windows.Forms.Timer();
+            timer.Tick += new EventHandler(EvalTick);
+            timer.Interval = 50;
+            timer.Start();
+        }
+
+        private async void EvalTick(object sender, EventArgs args)
+        {
+            string veryLongString = "1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,1234567890,";
+            var response = await browser.GetMainFrame().EvaluateScriptAsync($"(()=>{{var longStringAllocation='{veryLongString}';return 1;}})()");
+            var result = (int)response.Result;
         }
 
         private void OnBrowserConsoleMessage(object sender, ConsoleMessageEventArgs args)
